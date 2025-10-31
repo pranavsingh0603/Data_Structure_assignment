@@ -1,0 +1,129 @@
+// Library Book Management System using Linked List & Stack
+import java.util.*;
+
+class Book {
+    int bookID;
+    String title, author, status;
+    Book next;
+
+    Book(int id, String t, String a) {
+        bookID = id;
+        title = t;
+        author = a;
+        status = "Available";
+        next = null;
+    }
+}
+
+class LinkedList {
+    Book head;
+
+    void insertBook(int id, String title, String author) {
+        Book newBook = new Book(id, title, author);
+        if (head == null) head = newBook;
+        else {
+            Book temp = head;
+            while (temp.next != null) temp = temp.next;
+            temp.next = newBook;
+        }
+        System.out.println("Book added: " + title);
+    }
+
+    void deleteBook(int id) {
+        Book temp = head, prev = null;
+        while (temp != null && temp.bookID != id) {
+            prev = temp;
+            temp = temp.next;
+        }
+        if (temp == null) {
+            System.out.println("Book not found.");
+            return;
+        }
+        if (prev == null) head = temp.next;
+        else prev.next = temp.next;
+        System.out.println("Book ID " + id + " deleted.");
+    }
+
+    Book searchBook(int id) {
+        Book temp = head;
+        while (temp != null) {
+            if (temp.bookID == id) return temp;
+            temp = temp.next;
+        }
+        System.out.println("Book not found.");
+        return null;
+    }
+
+    void displayBooks() {
+        if (head == null) {
+            System.out.println("No books available.");
+            return;
+        }
+        System.out.println("\nCurrent Library Books:");
+        Book temp = head;
+        while (temp != null) {
+            System.out.println(temp.bookID + " | " + temp.title + " | " + temp.author + " | " + temp.status);
+            temp = temp.next;
+        }
+    }
+}
+
+class LibrarySystem {
+    LinkedList books = new LinkedList();
+    Stack<String> transactions = new Stack<>();
+
+    void issueBook(int id) {
+        Book b = books.searchBook(id);
+        if (b != null && b.status.equals("Available")) {
+            b.status = "Issued";
+            transactions.push("Issue " + id);
+            System.out.println("Book ID " + id + " issued.");
+        } else System.out.println("Book not available.");
+    }
+
+    void returnBook(int id) {
+        Book b = books.searchBook(id);
+        if (b != null && b.status.equals("Issued")) {
+            b.status = "Available";
+            transactions.push("Return " + id);
+            System.out.println("Book ID " + id + " returned.");
+        } else System.out.println("Book already available or not found.");
+    }
+
+    void undoTransaction() {
+        if (transactions.isEmpty()) {
+            System.out.println("No transactions to undo.");
+            return;
+        }
+        String last = transactions.pop();
+        String[] parts = last.split(" ");
+        String action = parts[0];
+        int id = Integer.parseInt(parts[1]);
+        Book b = books.searchBook(id);
+        if (b != null) {
+            if (action.equals("Issue")) b.status = "Available";
+            else if (action.equals("Return")) b.status = "Issued";
+            System.out.println("Undo successful for Book ID " + id);
+        }
+    }
+
+    void viewTransactions() {
+        if (transactions.isEmpty()) System.out.println("No recent transactions.");
+        else System.out.println("Transactions: " + transactions);
+    }
+}
+
+public class LibraryMain {
+    public static void main(String[] args) {
+        LibrarySystem lib = new LibrarySystem();
+        lib.books.insertBook(101, "Java Basics", "James");
+        lib.books.insertBook(102, "Data Structures", "Mark");
+        lib.books.displayBooks();
+
+        lib.issueBook(101);
+        lib.returnBook(101);
+        lib.undoTransaction();
+        lib.viewTransactions();
+        lib.books.displayBooks();
+    }
+}
