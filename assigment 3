@@ -1,180 +1,119 @@
-import java.util.*;
+  
+            
+        
 
-public class CampusPlanner {
+class Node:
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+        self.left = None
+        self.right = None
 
-    static class Building {
-        int id; String name;
-        Building(int id, String name){ this.id=id; this.name=name; }
-        public String toString(){ return id + " " + name; }
-    }
+class BST:
+    def __init__(self):
+        self.root = None
 
-    static class BST {
-        class Node{ Building b; Node l,r; Node(Building b){this.b=b;} }
-        Node root;
+    def insert(self, root, id, name):
+        if root is None:
+            return Node(id, name)
+        if id < root.id:
+            root.left = self.insert(root.left, id, name)
+        else:
+            root.right = self.insert(root.right, id, name)
+        return root
 
-        void insert(Building b){ root=ins(root,b); }
-        Node ins(Node n, Building b){
-            if(n==null) return new Node(b);
-            if(b.id<n.b.id) n.l=ins(n.l,b);
-            else n.r=ins(n.r,b);
-            return n;
-        }
+    def inorder(self, root):
+        if root:
+            self.inorder(root.left)
+            print(root.id, root.name)
+            self.inorder(root.right)
 
-        void inorder(){ in(root); }
-        void in(Node n){
-            if(n==null) return;
-            in(n.l); System.out.println(n.b); in(n.r);
-        }
-    }
+class Graph:
+    def __init__(self, n):
+        self.n = n
+        self.adj = defaultdict(list)
 
-    static class AVL {
-        class Node{ Building b; int h; Node l,r; Node(Building b){this.b=b;h=1;} }
-        Node root;
+    def addEdge(self, u, v, w):
+        self.adj[u].append((v, w))
+        self.adj[v].append((u, w))
 
-        int H(Node n){ return n==null?0:n.h; }
+    def BFS(self, start):
+        q = deque([start])
+        vis = set([start])
+        print("BFS:", end=" ")
+        while q:
+            u = q.popleft()
+            print(u, end=" ")
+            for v, _ in self.adj[u]:
+                if v not in vis:
+                    vis.add(v)
+                    q.append(v)
+        print()
 
-        Node rotateR(Node y){
-            Node x=y.l, t=x.r;
-            x.r=y; y.l=t;
-            y.h=1+Math.max(H(y.l),H(y.r));
-            x.h=1+Math.max(H(x.l),H(x.r));
-            return x;
-        }
-        Node rotateL(Node x){
-            Node y=x.r, t=y.l;
-            y.l=x; x.r=t;
-            x.h=1+Math.max(H(x.l),H(x.r));
-            y.h=1+Math.max(H(y.l),H(y.r));
-            return y;
-        }
+    def DFS(self, start):
+        print("DFS:", end=" ")
+        vis = set()
 
-        void insert(Building b){ root=ins(root,b); }
-        Node ins(Node n, Building b){
-            if(n==null) return new Node(b);
-            if(b.id<n.b.id) n.l=ins(n.l,b);
-            else n.r=ins(n.r,b);
+        def dfs(u):
+            vis.add(u)
+            print(u, end=" ")
+            for v, _ in self.adj[u]:
+                if v not in vis:
+                    dfs(v)
 
-            n.h=1+Math.max(H(n.l),H(n.r));
-            int bf=H(n.l)-H(n.r);
+        dfs(start)
+        print()
 
-            if(bf>1 && b.id<n.l.b.id) return rotateR(n);
-            if(bf<-1 && b.id>n.r.b.id) return rotateL(n);
-            if(bf>1 && b.id>n.l.b.id){ n.l=rotateL(n.l); return rotateR(n); }
-            if(bf<-1 && b.id<n.r.b.id){ n.r=rotateR(n.r); return rotateL(n); }
+    def dijkstra(self, start):
+        dist = [float('inf')] * self.n
+        dist[start] = 0
+        pq = [(0, start)]
+        while pq:
+            d, u = heapq.heappop(pq)
+            for v, w in self.adj[u]:
+                if dist[v] > d + w:
+                    dist[v] = d + w
+                    heapq.heappush(pq, (dist[v], v))
+        return dist
 
-            return n;
-        }
+    def kruskal(self):
+        edges = []
+        for u in self.adj:
+            for v, w in self.adj[u]:
+                if u < v:
+                    edges.append((w, u, v))
+        edges.sort()
 
-        void inorder(){ in(root); }
-        void in(Node n){
-            if(n==null) return;
-            in(n.l); System.out.println(n.b); in(n.r);
-        }
-    }
+        parent = list(range(self.n))
 
-    static class Graph {
-        Map<Integer,List<Integer>> g=new HashMap<>();
+        def find(x):
+            while parent[x] != x:
+                x = parent[x]
+            return x
 
-        void add(int v){ g.putIfAbsent(v,new ArrayList<>()); }
-        void edge(int u,int v){
-            g.get(u).add(v);
-            g.get(v).add(u);
-        }
+        mst = []
+        for w, u, v in edges:
+            fu, fv = find(u), find(v)
+            if fu != fv:
+                mst.append((u, v, w))
+                parent[fu] = fv
+        return mst
 
-        void bfs(int s){
-            Queue<Integer> q=new LinkedList<>();
-            Set<Integer> vis=new HashSet<>();
-            q.add(s); vis.add(s);
-            while(!q.isEmpty()){
-                int x=q.poll();
-                System.out.print(x+" ");
-                for(int k:g.get(x))
-                    if(!vis.contains(k)){
-                        vis.add(k);
-                        q.add(k);
-                    }
-            }
-            System.out.println();
-        }
+bst = BST()
+data = [(10, "Admin"), (5, "CSE"), (20, "Library")]
+for id, name in data:
+    bst.root = bst.insert(bst.root, id, name)
 
-        void dfs(int s){
-            Set<Integer> vis=new HashSet<>();
-            dfsR(s,vis);
-            System.out.println();
-        }
+print("BST Inorder:")
+bst.inorder(bst.root)
 
-        void dfsR(int u, Set<Integer> vis){
-            vis.add(u);
-            System.out.print(u+" ");
-            for(int k:g.get(u))
-                if(!vis.contains(k)) dfsR(k,vis);
-        }
-    }
+g = Graph(5)
+g.addEdge(0, 1, 4)
+g.addEdge(1, 2, 3)
+g.addEdge(0, 3, 2)
 
-    static class ExprNode {
-        String val; ExprNode l,r;
-        ExprNode(String v){ val=v; }
-    }
+g.BFS(0)
+g.DFS(0)
 
-    static class ExpressionTree {
-        ExprNode root;
-
-        ExprNode build(String postfix){
-            Stack<ExprNode> s=new Stack<>();
-            for(String t: postfix.split(" ")){
-                if("+-*/".contains(t)){
-                    ExprNode n=new ExprNode(t);
-                    n.r=s.pop();
-                    n.l=s.pop();
-                    s.push(n);
-                } else s.push(new ExprNode(t));
-            }
-            return root=s.pop();
-        }
-
-        double eval(ExprNode n){
-            if(n.l==null) return Double.parseDouble(n.val);
-            double a=eval(n.l), b=eval(n.r);
-            return switch(n.val){
-                case "+"->a+b;
-                case "-"->a-b;
-                case "*"->a*b;
-                default->a/b;
-            };
-        }
-    }
-
-    public static void main(String[] args) {
-
-        BST bst=new BST();
-        AVL avl=new AVL();
-        Graph g=new Graph();
-
-        Building b1=new Building(10,"Admin");
-        Building b2=new Building(5,"Library");
-        Building b3=new Building(20,"CSE");
-
-        bst.insert(b1); bst.insert(b2); bst.insert(b3);
-        avl.insert(b1); avl.insert(b2); avl.insert(b3);
-
-        System.out.println("BST:");
-        bst.inorder();
-
-        System.out.println("\nAVL:");
-        avl.inorder();
-
-        g.add(10); g.add(5); g.add(20);
-        g.edge(10,5);
-        g.edge(10,20);
-
-        System.out.println("\nBFS:");
-        g.bfs(10);
-
-        System.out.println("DFS:");
-        g.dfs(10);
-
-        ExpressionTree et=new ExpressionTree();
-        et.build("5 3 + 2 *");
-        System.out.println("\nExpression Value: "+et.eval(et.root));
-    }
-}
+print("Dijkstra from 0:", g.dijkstra(0))
+print("Kruskal MST:", g.kruskal())
