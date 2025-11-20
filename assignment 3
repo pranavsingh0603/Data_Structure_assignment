@@ -1,0 +1,117 @@
+
+
+class Node:
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+        self.left = None
+        self.right = None
+
+class BST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, root, id, name):
+        if root is None:
+            return Node(id, name)
+        if id < root.id:
+            root.left = self.insert(root.left, id, name)
+        else:
+            root.right = self.insert(root.right, id, name)
+        return root
+
+    def inorder(self, root):
+        if root:
+            self.inorder(root.left)
+            print(root.id, root.name)
+            self.inorder(root.right)
+
+class Graph:
+    def __init__(self, n):
+        self.n = n
+        self.adj = defaultdict(list)
+
+    def addEdge(self, u, v, w):
+        self.adj[u].append((v, w))
+        self.adj[v].append((u, w))
+
+    def BFS(self, start):
+        q = deque([start])
+        vis = set([start])
+        print("BFS:", end=" ")
+        while q:
+            u = q.popleft()
+            print(u, end=" ")
+            for v, _ in self.adj[u]:
+                if v not in vis:
+                    vis.add(v)
+                    q.append(v)
+        print()
+
+    def DFS(self, start):
+        print("DFS:", end=" ")
+        vis = set()
+
+        def dfs(u):
+            vis.add(u)
+            print(u, end=" ")
+            for v, _ in self.adj[u]:
+                if v not in vis:
+                    dfs(v)
+
+        dfs(start)
+        print()
+
+    def dijkstra(self, start):
+        dist = [float('inf')] * self.n
+        dist[start] = 0
+        pq = [(0, start)]
+        while pq:
+            d, u = heapq.heappop(pq)
+            for v, w in self.adj[u]:
+                if dist[v] > d + w:
+                    dist[v] = d + w
+                    heapq.heappush(pq, (dist[v], v))
+        return dist
+
+    def kruskal(self):
+        edges = []
+        for u in self.adj:
+            for v, w in self.adj[u]:
+                if u < v:
+                    edges.append((w, u, v))
+        edges.sort()
+
+        parent = list(range(self.n))
+
+        def find(x):
+            while parent[x] != x:
+                x = parent[x]
+            return x
+
+        mst = []
+        for w, u, v in edges:
+            fu, fv = find(u), find(v)
+            if fu != fv:
+                mst.append((u, v, w))
+                parent[fu] = fv
+        return mst
+
+bst = BST()
+data = [(10, "Admin"), (5, "CSE"), (20, "Library")]
+for id, name in data:
+    bst.root = bst.insert(bst.root, id, name)
+
+print("BST Inorder:")
+bst.inorder(bst.root)
+
+g = Graph(5)
+g.addEdge(0, 1, 4)
+g.addEdge(1, 2, 3)
+g.addEdge(0, 3, 2)
+
+g.BFS(0)
+g.DFS(0)
+
+print("Dijkstra from 0:", g.dijkstra(0))
+print("Kruskal MST:", g.kruskal())
